@@ -20,5 +20,6 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# Context
+# Context & uploaded assets
 /context
+/images/

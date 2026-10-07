@@ -11,7 +11,7 @@ const HERO_SLIDES = [
     description: "Chọn thửa đất canh tác hữu cơ, lựa chọn giống rau VietGAP yêu thích và theo dõi toàn bộ hành trình sinh trưởng từ xa cùng Farmely."
   },
   {
-    image: "/images/moc%20chau%202811.jpg",
+    image: "/images/moc-chau-2811.jpg",
     headingLine1: "Nông nghiệp sạch",
     headingLine2: "Minh bạch từng luống đất",
     description: "Trực tiếp giám sát qua trạm IoT vi khí hậu, nhật ký canh tác điện tử của công nhân và nhận hướng dẫn 1-1 từ chuyên gia nông nghiệp."
