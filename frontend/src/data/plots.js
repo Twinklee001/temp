@@ -1,4 +1,4 @@
-export const plotsData = [
+const initialPlotsData = [
   {
     id: "PLT-101",
     code: "P-101",
@@ -184,3 +184,37 @@ export const plotsData = [
     }
   }
 ];
+
+import { MARKETPLACE_PLOTS_GIS } from './marketplaceGisData';
+
+const happyValleyPlotsFormatted = MARKETPLACE_PLOTS_GIS.map(p => ({
+  id: p.id,
+  code: p.code,
+  name: p.name,
+  landId: p.farmId,
+  landName: p.farmName,
+  area: p.areaFormatted,
+  soilType: "Đất phù sa bồi lắng giàu mùn hữu cơ (pH 6.2 - 6.8)",
+  status: p.status,
+  rentalPrice: p.rentalPrice,
+  formattedPrice: p.rentalPriceFormatted,
+  careServicePrice: Math.round(p.rentalPrice * 0.5),
+  iotStationId: `IOT-HV-${p.code.replace('Plot P-', '')}`,
+  iotStationName: `Trạm Cảm Biến Happy Valley ${p.code.replace('Plot P-', '')}`,
+  compatibleCrops: p.compatibleCrops ? p.compatibleCrops.map(c => c.name) : ["Xà lách", "Cải bó xôi"],
+  description: `Thửa đất canh tác chuẩn VietGAP tại ${p.farmLocation}. Đã hoàn thiện rãnh thoát nước và trạm IoT đo vi khí hậu.`,
+  imageUrl: p.imageUrl,
+  gallery: p.gallery,
+  boundaryCoordinates: `Phân khu thung lũng, Lô ${p.label}`,
+  currentCrop: p.status === 'RENTED' ? p.crop : null,
+  tenantName: p.status === 'RENTED' ? 'Khách hàng Farmely' : null,
+  recentSensorReadings: {
+    temperature: "26.5 °C",
+    humidity: "72 %",
+    soilMoisture: "68 %",
+    lastUpdated: "5 phút trước"
+  }
+}));
+
+export const plotsData = [...initialPlotsData, ...happyValleyPlotsFormatted];
+

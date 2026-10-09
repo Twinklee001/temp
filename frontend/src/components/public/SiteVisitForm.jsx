@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, FileText, CheckCircle2, MapPin } from 'lucide-react';
+import { Calendar, PhoneCall, CheckCircle2, MapPin } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { plotsData } from '../../data/plots';
+import { landsData } from '../../data/lands';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import Select from '../common/Select';
@@ -14,10 +15,8 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
   const [visitorName, setVisitorName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
-  const [selectedPlot, setSelectedPlot] = useState(preselectedPlotId || 'PLT-101');
   const [visitDate, setVisitDate] = useState('');
-  const [timeSlot, setTimeSlot] = useState('MORNING');
-  const [groupSize, setGroupSize] = useState('2');
+  const [selectedFarm, setSelectedFarm] = useState('');
   const [notes, setNotes] = useState('');
 
   // Validation State
@@ -34,13 +33,12 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
     }
   }, [isAuthenticated, user]);
 
-  useEffect(() => {
-    if (preselectedPlotId) {
-      setSelectedPlot(preselectedPlotId);
-    }
-  }, [preselectedPlotId]);
+  // Find preselected plot if provided
+  const selectedPlotObj = preselectedPlotId
+    ? plotsData.find((p) => p.id === preselectedPlotId)
+    : null;
 
-  // Set default min date (24 hours from today)
+  // Set default min date (tomorrow)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDateStr = tomorrow.toISOString().split('T')[0];
@@ -60,25 +58,14 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
 
     const phoneRegex = /^0[0-9]{9}$/;
     if (!phoneNumber.trim()) {
-      errs.phone = 'Vui lòng nhập số điện thoại.';
+      errs.phone = 'Vui lòng nhập số điện thoại để chúng tôi liên hệ xác nhận.';
     } else if (!phoneRegex.test(phoneNumber.trim())) {
       errs.phone = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.';
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailAddress.trim()) {
-      errs.email = 'Vui lòng nhập địa chỉ email.';
-    } else if (!emailRegex.test(emailAddress.trim())) {
+    if (emailAddress.trim() && !emailRegex.test(emailAddress.trim())) {
       errs.email = 'Email không hợp lệ (ví dụ: ten@domain.com).';
-    }
-
-    if (!visitDate) {
-      errs.date = 'Vui lòng chọn ngày tham quan nông trại.';
-    }
-
-    const grp = parseInt(groupSize, 10);
-    if (isNaN(grp) || grp < 1 || grp > 5) {
-      errs.groupSize = 'Quy mô đoàn tham quan từ 1 đến 5 người.';
     }
 
     if (notes.length > 500) {
@@ -102,26 +89,38 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
     }, 600);
   };
 
-  const selectedPlotObj = plotsData.find((p) => p.id === selectedPlot);
-
   return (
     <div className="bg-white rounded-2xl p-6 sm:p-8 border border-brand-border shadow-sm">
       <div className="mb-6">
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-cream text-brand-green border border-brand-border">
-          Mã màn hình: SCR-PUB-05
-        </span>
-        <h2 className="font-heading text-2xl font-bold text-brand-dark mt-2">
-          Đặt Lịch Tham Quan Vườn Thực Tế
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-cream text-brand-green border border-brand-border mb-2">
+          <PhoneCall className="w-3.5 h-3.5" />
+          <span>Hỗ Trợ Đặt Lịch & Tư Vấn</span>
+        </div>
+        <h2 className="font-heading text-2xl font-bold text-brand-dark">
+          Đăng Ký Tham Quan Nông Trại
         </h2>
         <p className="text-xs sm:text-sm text-brand-muted mt-1 leading-relaxed">
-          Tham quan trang trại là <strong>tùy chọn tự do</strong> và <strong>không bắt buộc</strong> trước khi thuê. Đội ngũ kỹ thuật viên sẽ dẫn bạn khảo sát thực địa đất, nguồn nước và trạm IoT.
+          Bạn chỉ cần để lại thông tin liên hệ. Chuyên viên Farmely sẽ chủ động gọi điện lại để tư vấn, xác nhận lịch hẹn và hỗ trợ đón tiếp bạn chu đáo nhất.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Preselected Plot Badge (if coming from a specific plot page) */}
+        {selectedPlotObj && (
+          <div className="p-3.5 rounded-xl bg-brand-cream/70 border border-brand-border flex items-center gap-2.5 text-xs text-brand-dark">
+            <MapPin className="w-4 h-4 text-brand-green shrink-0" />
+            <div>
+              <span>Thửa đất bạn đang quan tâm: </span>
+              <strong className="text-brand-green font-bold">{selectedPlotObj.name}</strong>
+              <span className="text-stone-500"> ({selectedPlotObj.landName})</span>
+            </div>
+          </div>
+        )}
+
+        {/* Contact Info: Name & Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
-            label="Họ và tên người đại diện"
+            label="Họ và tên người liên hệ"
             required
             placeholder="Ví dụ: Nguyễn Thu Hà"
             value={visitorName}
@@ -139,43 +138,20 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
           />
         </div>
 
+        {/* Optional Email & Preferred Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
-            label="Địa chỉ email nhận xác nhận"
+            label="Địa chỉ email (Tùy chọn)"
             type="email"
-            required
             placeholder="email@example.com"
             value={emailAddress}
             onChange={(e) => setEmailAddress(e.target.value)}
             error={errors.email}
           />
 
-          <Select
-            label="Thửa đất dự định khảo sát"
-            required
-            value={selectedPlot}
-            onChange={(e) => setSelectedPlot(e.target.value)}
-            options={plotsData.map((p) => ({
-              value: p.id,
-              label: `${p.code} - ${p.name} (${p.area} tại ${p.landName})`
-            }))}
-          />
-        </div>
-
-        {selectedPlotObj && (
-          <div className="p-3 rounded-xl bg-brand-cream/60 border border-brand-border/80 flex items-center gap-3 text-xs">
-            <MapPin className="w-4 h-4 text-brand-green shrink-0" />
-            <div className="truncate">
-              <span className="font-bold text-brand-dark">{selectedPlotObj.name}: </span>
-              <span className="text-stone-600">{selectedPlotObj.soilType} | {selectedPlotObj.formattedPrice}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div>
             <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
-              Ngày tham quan <span className="text-rose-500">*</span>
+              Ngày dự kiến tham quan (Tùy chọn)
             </label>
             <input
               type="date"
@@ -183,49 +159,38 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
               max={maxDateStr}
               value={visitDate}
               onChange={(e) => setVisitDate(e.target.value)}
-              className={`w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-brand-dark transition-all focus:outline-none focus:ring-2 focus:ring-brand-green/20 ${
-                errors.date ? 'border-rose-400' : 'border-brand-border'
-              }`}
+              className="w-full rounded-xl border border-brand-border bg-white px-3.5 py-2.5 text-sm text-brand-dark transition-all focus:outline-none focus:ring-2 focus:ring-brand-green/20"
             />
-            {errors.date && <p className="mt-1 text-xs text-rose-600 font-medium">{errors.date}</p>}
-            <p className="mt-1 text-[11px] text-brand-muted">Từ 24h đến 30 ngày tới</p>
+            <p className="mt-1 text-[11px] text-brand-muted">Hoặc để trống, nhân viên sẽ hẹn ngày phù hợp khi gọi lại</p>
           </div>
-
-          <Select
-            label="Khung giờ ca trực"
-            required
-            value={timeSlot}
-            onChange={(e) => setTimeSlot(e.target.value)}
-            options={[
-              { value: 'MORNING', label: 'Ca sáng (08:30 – 10:30)' },
-              { value: 'AFTERNOON', label: 'Ca chiều (14:30 – 16:30)' }
-            ]}
-          />
-
-          <Select
-            label="Quy mô đoàn (người)"
-            required
-            value={groupSize}
-            onChange={(e) => setGroupSize(e.target.value)}
-            options={[
-              { value: '1', label: '1 người' },
-              { value: '2', label: '2 người' },
-              { value: '3', label: '3 người' },
-              { value: '4', label: '4 người' },
-              { value: '5', label: '5 người (Tối đa)' }
-            ]}
-          />
         </div>
 
+        {/* Farm of Interest (only if not preselected from a specific plot) */}
+        {!selectedPlotObj && (
+          <Select
+            label="Khu vực nông trại quan tâm (Tùy chọn)"
+            value={selectedFarm}
+            onChange={(e) => setSelectedFarm(e.target.value)}
+            options={[
+              { value: '', label: '-- Chọn khu vực nông trại (hoặc để nhân viên tư vấn) --' },
+              ...landsData.map((l) => ({
+                value: l.name,
+                label: `${l.name} (${l.location})`
+              }))
+            ]}
+          />
+        )}
+
+        {/* Notes */}
         <div>
           <label className="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
-            Ghi chú / Yêu cầu đặc biệt (tối đa 500 ký tự)
+            Ghi chú / Yêu cầu tư vấn (Tùy chọn)
           </label>
           <textarea
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ví dụ: Đi cùng gia đình có trẻ nhỏ, muốn xem hệ thống cảm biến độ ẩm đất..."
+            placeholder="Ví dụ: Đi cùng gia đình 3 người, muốn xem hệ thống tưới nước tự động, tiện nhận cuộc gọi sau 17h..."
             className="w-full rounded-xl border border-brand-border bg-white px-3.5 py-2.5 text-sm text-brand-dark transition-all focus:outline-none focus:ring-2 focus:ring-brand-green/20"
           />
           {errors.notes && <p className="mt-1 text-xs text-rose-600 font-medium">{errors.notes}</p>}
@@ -239,8 +204,11 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
             className="w-full uppercase tracking-wider font-extrabold"
             loading={isSubmitting}
           >
-            XÁC NHẬN ĐẶT LỊCH THAM QUAN
+            GỬI THÔNG TIN ĐẶT LỊCH THAM QUAN
           </Button>
+          <p className="text-center text-[11px] text-brand-muted mt-2">
+            Nhân viên Farmely sẽ liên hệ lại với bạn trong vòng 2 giờ làm việc để xác nhận.
+          </p>
         </div>
       </form>
 
@@ -248,7 +216,7 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
       <Modal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Lên Lịch Tham Quan Thành Công!"
+        title="Gửi Yêu Cầu Thành Công!"
       >
         <div className="text-center py-4 space-y-4">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
@@ -256,19 +224,20 @@ export default function SiteVisitForm({ preselectedPlotId, onSuccess }) {
           </div>
           <div>
             <h4 className="font-heading text-lg font-bold text-brand-dark">
-              Inspection scheduled.
+              Đã Nhận Thông Tin Đặt Lịch!
             </h4>
-            <p className="text-xs text-brand-muted mt-1">
-              Trạng thái đơn: <strong className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">PENDING_CONFIRMATION</strong>
-            </p>
             <p className="text-sm text-stone-600 mt-2">
-              Nhân viên trang trại Farmely sẽ gọi điện xác nhận lịch hẹn với bạn trong vòng <strong>2 giờ</strong> làm việc.
+              Chuyên viên Farmely sẽ gọi điện lại cho bạn qua số điện thoại <strong>{phoneNumber}</strong> trong vòng <strong>2 giờ</strong> làm việc để tư vấn và chốt lịch tham quan cụ thể.
             </p>
           </div>
           <div className="p-3.5 rounded-xl bg-brand-cream text-left text-xs space-y-1.5 border border-brand-border">
-            <p><strong>Khách tham quan:</strong> {visitorName} ({phoneNumber})</p>
-            <p><strong>Ngày hẹn:</strong> {visitDate} ({timeSlot === 'MORNING' ? '08:30 - 10:30' : '14:30 - 16:30'})</p>
-            <p><strong>Thửa đất:</strong> {selectedPlotObj?.code} - {selectedPlotObj?.name}</p>
+            <p><strong>Khách hàng:</strong> {visitorName}</p>
+            <p><strong>Số điện thoại:</strong> {phoneNumber}</p>
+            {emailAddress && <p><strong>Email:</strong> {emailAddress}</p>}
+            {visitDate && <p><strong>Ngày dự kiến:</strong> {visitDate}</p>}
+            {selectedPlotObj && <p><strong>Thửa đất quan tâm:</strong> {selectedPlotObj.name} ({selectedPlotObj.landName})</p>}
+            {selectedFarm && !selectedPlotObj && <p><strong>Khu vực quan tâm:</strong> {selectedFarm}</p>}
+            {notes && <p><strong>Ghi chú:</strong> {notes}</p>}
           </div>
           <Button
             variant="primary"

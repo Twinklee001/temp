@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, LogOut, ChevronDown, Menu, X, Shield, Sprout, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, ChevronDown, Menu, X, Shield, Sprout, ClipboardCheck, ShieldCheck, Settings, LayoutDashboard, Check, Bell, Lock } from 'lucide-react';
 import { useAuthStore, DEMO_ACCOUNTS } from '../../stores/authStore';
 import Button from '../common/Button';
+import Modal from '../common/Modal';
 
 export default function PublicNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -11,9 +12,39 @@ export default function PublicNavbar() {
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
 
+  // User Profile & Settings Modals
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  
+  const [profileForm, setProfileForm] = useState({
+    fullName: '',
+    phone: '0912 345 678',
+    address: 'Số 86 Đường Số 7, Phường An Phú, TP. Thủ Đức, TP. Hồ Chí Minh',
+    bio: 'Khách hàng canh tác nông nghiệp công nghệ cao và tự trồng rau sạch.'
+  });
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
+
+  const [settingsForm, setSettingsForm] = useState({
+    emailNoti: true,
+    smsNoti: true,
+    weatherAlert: true,
+    twoFactor: false
+  });
+  const [settingsSuccessMsg, setSettingsSuccessMsg] = useState('');
+
   const { user, isAuthenticated, logout, switchRole } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Sync profileForm with user on change
+  useEffect(() => {
+    if (user) {
+      setProfileForm((prev) => ({
+        ...prev,
+        fullName: user.fullName || prev.fullName
+      }));
+    }
+  }, [user]);
 
   const handleScrollToSection = (sectionId) => {
     setAboutDropdownOpen(false);
@@ -54,7 +85,7 @@ export default function PublicNavbar() {
 
   const getDashboardRoute = (role) => {
     switch (role) {
-      case 'ADMIN': return '/admin/master-data';
+      case 'ADMIN': return '/admin/dashboard';
       case 'EXPERT': return '/expert/dashboard';
       case 'STAFF': return '/staff/dashboard';
       case 'CUSTOMER': return '/customer/dashboard';
@@ -104,6 +135,27 @@ export default function PublicNavbar() {
             >
               Marketplace
             </Link>
+
+            {/* Dynamic Role Dashboard Link (Khi đã đăng nhập) */}
+            {isAuthenticated && (
+              <Link
+                to={getDashboardRoute(user?.role)}
+                className={`text-sm font-semibold transition-colors hover:text-brand-yellow flex items-center gap-1.5 ${
+                  location.pathname.includes('/dashboard') ? 'text-brand-yellow font-bold' : 'text-white/95'
+                }`}
+              >
+                <Sprout className="w-4 h-4 text-brand-yellow" />
+                <span>
+                  {user?.role === 'ADMIN'
+                    ? 'Bảng Quản Trị'
+                    : user?.role === 'EXPERT'
+                    ? 'Bàn Làm Việc Chuyên Gia'
+                    : user?.role === 'STAFF'
+                    ? 'Ca Trực Hiện Trường'
+                    : 'Vườn của tôi'}
+                </span>
+              </Link>
+            )}
 
             {/* Về Farmely (Direct Link to /about + Hover Dropdown for sections) */}
             <div
@@ -190,17 +242,6 @@ export default function PublicNavbar() {
 
           {/* RIGHT: Customer Dashboard shortcut (if logged in) + Search + Role Switcher + Auth */}
           <div className="hidden md:flex items-center gap-3">
-            
-            {/* If CUSTOMER is logged in, show quick shortcut to their Yards */}
-            {isAuthenticated && user?.role === 'CUSTOMER' && (
-              <Link
-                to="/customer/dashboard"
-                className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#F5CF62] text-brand-dark hover:scale-105 transition-all shadow-sm flex items-center gap-1.5"
-              >
-                <Sprout className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Vườn Của Tôi</span>
-              </Link>
-            )}
 
             {/* Search Icon */}
             <div className="flex items-center pr-2 border-r border-white/20 h-10">
@@ -239,6 +280,7 @@ export default function PublicNavbar() {
                       onClick={() => {
                         switchRole(acc.role);
                         setRoleSwitcherOpen(false);
+                        navigate(getDashboardRoute(acc.role));
                       }}
                       className="w-full text-left px-3 py-2 text-xs hover:bg-brand-cream/80 flex items-center justify-between transition-colors"
                     >
@@ -299,39 +341,79 @@ export default function PublicNavbar() {
                   </button>
 
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white text-brand-dark rounded-xl shadow-elevated border border-brand-border py-2 z-50">
-                      <div className="px-4 py-2 border-b border-brand-border/60">
-                        <p className="text-xs font-bold text-brand-dark">{user?.fullName}</p>
-                        <p className="text-[11px] text-brand-muted truncate">{user?.email}</p>
-                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {user?.roleTitle || user?.role}
+                    <div className="absolute right-0 mt-2 w-64 bg-white text-brand-dark rounded-2xl shadow-elevated border border-brand-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
+                      {/* User Header */}
+                      <div className="px-4 py-2.5 border-b border-brand-border/60">
+                        <p className="font-bold text-brand-dark text-sm truncate">{user?.fullName || 'Lô Thái Quyền'}</p>
+                        <p className="text-[11px] text-brand-muted truncate">{user?.email || 'customer@farmely.vn'}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {user?.roleTitle || (user?.role === 'CUSTOMER' ? 'Khách hàng thuê đất' : user?.role === 'ADMIN' ? 'Quản trị viên hệ thống' : user?.role === 'EXPERT' ? 'Chuyên gia nông nghiệp' : 'Chuyên viên lao động')}
                         </span>
                       </div>
 
-                      <Link
-                        to={getDashboardRoute(user?.role)}
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs text-brand-dark hover:bg-brand-cream transition-colors font-medium"
-                      >
-                        <User className="w-4 h-4 text-brand-green" />
-                        Trang Dashboard {user?.role}
-                      </Link>
+                      <div className="py-1">
+                        {/* 1. Dashboard Link theo Role */}
+                        <Link
+                          to={getDashboardRoute(user?.role)}
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-brand-cream transition-colors font-medium text-stone-700 hover:text-brand-dark cursor-pointer"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-brand-green" />
+                          <span>
+                            {user?.role === 'CUSTOMER'
+                              ? 'Vườn Của Tôi (Dashboard)'
+                              : user?.role === 'ADMIN'
+                              ? 'Bảng Quản Trị Hệ Thống'
+                              : user?.role === 'EXPERT'
+                              ? 'Bàn Làm Việc Chuyên Gia'
+                              : 'Ca Trực Hiện Trường'}
+                          </span>
+                        </Link>
 
-                      <Link
-                        to="/admin/master-data"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs text-brand-dark hover:bg-brand-cream transition-colors font-medium"
-                      >
-                        <Shield className="w-4 h-4 text-brand-green" />
-                        Quản lý Master Data
-                      </Link>
+                        {/* 2. Hồ sơ cá nhân (User Profile) */}
+                        <button
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            setIsProfileModalOpen(true);
+                          }}
+                          className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 hover:bg-brand-cream transition-colors font-medium text-stone-700 hover:text-brand-dark cursor-pointer"
+                        >
+                          <User className="w-4 h-4 text-brand-green" />
+                          <span>Hồ sơ cá nhân (Profile)</span>
+                        </button>
 
+                        {/* 3. Cài đặt tài khoản (Settings) */}
+                        <button
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            setIsSettingsModalOpen(true);
+                          }}
+                          className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 hover:bg-brand-cream transition-colors font-medium text-stone-700 hover:text-brand-dark cursor-pointer"
+                        >
+                          <Settings className="w-4 h-4 text-brand-green" />
+                          <span>Cài đặt tài khoản (Settings)</span>
+                        </button>
+
+                        {/* 4. CHỈ ADMIN MỚI THẤY Quản lý Master Data */}
+                        {user?.role === 'ADMIN' && (
+                          <Link
+                            to="/admin/master-data"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-amber-50 transition-colors font-medium text-amber-800 border-t border-brand-border/40 mt-1 pt-2 cursor-pointer"
+                          >
+                            <Shield className="w-4 h-4 text-amber-600" />
+                            <span>Quản lý Master Data</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* 5. Đăng xuất */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition-colors font-semibold border-t border-brand-border/60 mt-1"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-rose-600 hover:bg-rose-50 transition-colors font-semibold border-t border-brand-border/60 mt-1 cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
-                        Đăng xuất
+                        <span>Đăng xuất</span>
                       </button>
                     </div>
                   )}
@@ -373,14 +455,22 @@ export default function PublicNavbar() {
             Marketplace
           </Link>
 
-          {isAuthenticated && user?.role === 'CUSTOMER' && (
+          {isAuthenticated && (
             <Link
-              to="/customer/dashboard"
+              to={getDashboardRoute(user?.role)}
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-bold text-brand-yellow flex items-center gap-2"
             >
               <Sprout className="w-4 h-4" />
-              <span>Vườn Của Tôi (Dashboard)</span>
+              <span>
+                {user?.role === 'ADMIN'
+                  ? 'Bảng Quản Trị Hệ Thống'
+                  : user?.role === 'EXPERT'
+                  ? 'Bàn Làm Việc Chuyên Gia'
+                  : user?.role === 'STAFF'
+                  ? 'Ca Trực Hiện Trường'
+                  : 'Vườn Của Tôi (Dashboard)'}
+              </span>
             </Link>
           )}
 
@@ -435,6 +525,230 @@ export default function PublicNavbar() {
           </div>
         </div>
       )}
+
+      {/* User Profile Modal */}
+      <Modal
+        isOpen={isProfileModalOpen}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          setProfileSuccessMsg('');
+        }}
+        title="Hồ Sơ Cá Nhân (User Profile)"
+        subtitle="Thông tin tài khoản và thông tin nhận nông sản"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setProfileSuccessMsg('Đã cập nhật thông tin hồ sơ thành công!');
+            setTimeout(() => setProfileSuccessMsg(''), 3000);
+          }}
+          className="space-y-4 text-xs text-left"
+        >
+          {profileSuccessMsg && (
+            <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 text-brand-green" />
+              <span>{profileSuccessMsg}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 p-3.5 bg-stone-50 rounded-2xl border border-stone-200">
+            <img
+              src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"}
+              alt={user?.fullName}
+              className="w-14 h-14 rounded-full object-cover border-2 border-brand-yellow shadow-sm"
+            />
+            <div className="space-y-1">
+              <p className="font-bold text-brand-dark text-sm">{profileForm.fullName || user?.fullName || 'Lô Thái Quyền'}</p>
+              <p className="text-stone-500 text-[11px]">{user?.email || 'customer@farmely.vn'}</p>
+              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                {user?.roleTitle || (user?.role === 'CUSTOMER' ? 'Khách hàng thuê đất' : user?.role === 'ADMIN' ? 'Quản trị viên hệ thống' : user?.role === 'EXPERT' ? 'Chuyên gia nông nghiệp' : 'Chuyên viên lao động')}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-brand-dark mb-1">Họ và tên:</label>
+              <input
+                type="text"
+                required
+                value={profileForm.fullName}
+                onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                className="w-full p-2.5 rounded-xl border border-brand-border text-xs focus:ring-2 focus:ring-brand-green/20"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-brand-dark mb-1">Số điện thoại liên hệ:</label>
+              <input
+                type="text"
+                required
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                className="w-full p-2.5 rounded-xl border border-brand-border text-xs focus:ring-2 focus:ring-brand-green/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-brand-dark mb-1">Địa chỉ giao nhận nông sản thu hoạch tận nhà:</label>
+            <input
+              type="text"
+              required
+              value={profileForm.address}
+              onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+              className="w-full p-2.5 rounded-xl border border-brand-border text-xs focus:ring-2 focus:ring-brand-green/20"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-brand-dark mb-1">Giới thiệu ngắn:</label>
+            <textarea
+              rows={2}
+              value={profileForm.bio}
+              onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+              className="w-full p-2.5 rounded-xl border border-brand-border text-xs focus:ring-2 focus:ring-brand-green/20"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-brand-border">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsProfileModalOpen(false)}
+            >
+              Đóng
+            </Button>
+            <Button type="submit" variant="primary" size="sm" className="font-bold">
+              Lưu Thay Đổi
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Account Settings Modal */}
+      <Modal
+        isOpen={isSettingsModalOpen}
+        onClose={() => {
+          setIsSettingsModalOpen(false);
+          setSettingsSuccessMsg('');
+        }}
+        title="Cài Đặt Tài Khoản (Settings)"
+        subtitle="Quản lý tùy chọn thông báo, ngôn ngữ và bảo mật"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setSettingsSuccessMsg('Đã lưu cấu hình cài đặt tài khoản thành công!');
+            setTimeout(() => setSettingsSuccessMsg(''), 3000);
+          }}
+          className="space-y-4 text-xs text-left"
+        >
+          {settingsSuccessMsg && (
+            <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 text-brand-green" />
+              <span>{settingsSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* Section 1: Notifications */}
+          <div className="space-y-2">
+            <h5 className="font-bold text-brand-dark text-xs uppercase tracking-wider text-stone-500">
+              Thông Báo & Cảnh Báo Mùa Vụ
+            </h5>
+            <div className="space-y-2.5 bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="font-bold text-brand-dark block">Thông báo qua Email</span>
+                  <span className="text-stone-500 text-[11px]">Nhận báo cáo tiến độ mùa vụ và nhật ký canh tác thực địa</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settingsForm.emailNoti}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, emailNoti: e.target.checked })}
+                  className="w-4 h-4 accent-brand-green rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer pt-2 border-t border-stone-200/60">
+                <div>
+                  <span className="font-bold text-brand-dark block">SMS Cảnh Báo Thu Hoạch</span>
+                  <span className="text-stone-500 text-[11px]">Tin nhắn SMS khi nông sản sẵn sàng thu hái hoặc giao hàng</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settingsForm.smsNoti}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, smsNoti: e.target.checked })}
+                  className="w-4 h-4 accent-brand-green rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer pt-2 border-t border-stone-200/60">
+                <div>
+                  <span className="font-bold text-brand-dark block">Cảnh Báo Biến Động Vi Khí Hậu</span>
+                  <span className="text-stone-500 text-[11px]">Thông báo ngay khi độ ẩm hoặc nhiệt độ đất vượt ngưỡng chuẩn</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settingsForm.weatherAlert}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, weatherAlert: e.target.checked })}
+                  className="w-4 h-4 accent-brand-green rounded cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Section 2: Security & Password */}
+          <div className="space-y-2">
+            <h5 className="font-bold text-brand-dark text-xs uppercase tracking-wider text-stone-500">
+              Bảo Mật & Mật Khẩu
+            </h5>
+            <div className="space-y-2.5 bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block font-medium text-stone-700 mb-1">Mật khẩu mới:</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full p-2 rounded-lg border border-brand-border bg-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-stone-700 mb-1">Xác nhận mật khẩu:</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full p-2 rounded-lg border border-brand-border bg-white text-xs"
+                  />
+                </div>
+              </div>
+              <label className="flex items-center justify-between cursor-pointer pt-1.5 border-t border-stone-200/60">
+                <span className="text-stone-700 font-medium">Bật xác thực hai yếu tố (2FA) qua ứng dụng</span>
+                <input
+                  type="checkbox"
+                  checked={settingsForm.twoFactor}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, twoFactor: e.target.checked })}
+                  className="w-4 h-4 accent-brand-green rounded cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-brand-border">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSettingsModalOpen(false)}
+            >
+              Đóng
+            </Button>
+            <Button type="submit" variant="primary" size="sm" className="font-bold">
+              Lưu Cài Đặt
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </nav>
   );
 }

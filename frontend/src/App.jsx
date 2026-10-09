@@ -12,6 +12,9 @@ import BookPlot from './pages/public/BookPlot';
 import ForgotPassword from './pages/public/ForgotPassword';
 import About from './pages/public/About';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ExpertDashboard from './pages/expert/ExpertDashboard';
+import FieldWorkerDashboard from './pages/staff/FieldWorkerDashboard';
 
 // Admin Master Data Pages
 import MasterDataLayout from './components/master-data/MasterDataLayout';
@@ -46,13 +49,12 @@ export default function App() {
         <Route path="/marketplace/plot/:id" element={<PlotDetail />} />
         <Route path="/marketplace/plot/:id/book" element={<BookPlot />} />
 
-        {/* Customer Dashboard Route */}
+        {/* Role-Specific Dashboards */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-
-        {/* Role Dashboard Fallback Redirects */}
-        <Route path="/expert/dashboard" element={<Navigate to="/admin/master-data" replace />} />
-        <Route path="/staff/dashboard" element={<Navigate to="/admin/master-data" replace />} />
-        <Route path="/admin/dashboard" element={<Navigate to="/admin/master-data" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/expert/dashboard" element={<ExpertDashboard />} />
+        <Route path="/staff/dashboard" element={<FieldWorkerDashboard />} />
+        <Route path="/worker/dashboard" element={<Navigate to="/staff/dashboard" replace />} />
 
         {/* Admin Master Data Nested Routes */}
         <Route path="/admin/master-data" element={<MasterDataLayout />}>
