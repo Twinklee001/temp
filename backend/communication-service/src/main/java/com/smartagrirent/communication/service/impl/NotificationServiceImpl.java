@@ -4,7 +4,6 @@ import com.smartagrirent.communication.dto.response.NotificationResponse;
 import com.smartagrirent.communication.entity.Notification;
 import com.smartagrirent.communication.repository.NotificationRepository;
 import com.smartagrirent.communication.service.NotificationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,10 +11,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+
+    public NotificationServiceImpl(NotificationRepository notificationRepository) {
+        this.notificationRepository = notificationRepository;
+    }
 
     @Override
     @Transactional(readOnly = true)

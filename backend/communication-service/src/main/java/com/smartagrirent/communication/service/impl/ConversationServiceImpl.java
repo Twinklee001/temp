@@ -9,7 +9,6 @@ import com.smartagrirent.communication.entity.Message;
 import com.smartagrirent.communication.repository.ConversationRepository;
 import com.smartagrirent.communication.repository.MessageRepository;
 import com.smartagrirent.communication.service.ConversationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +17,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ConversationServiceImpl implements ConversationService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+
+    public ConversationServiceImpl(ConversationRepository conversationRepository, MessageRepository messageRepository) {
+        this.conversationRepository = conversationRepository;
+        this.messageRepository = messageRepository;
+    }
 
     @Override
     @Transactional(readOnly = true)

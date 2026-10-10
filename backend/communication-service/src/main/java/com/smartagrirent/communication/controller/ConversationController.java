@@ -9,19 +9,22 @@ import com.smartagrirent.communication.service.ConversationService;
 import com.smartagrirent.communication.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/conversations")
-@RequiredArgsConstructor
 @Tag(name = "Conversation & Chat API", description = "Endpoints for consultation chat, AI conversation and messages")
 public class ConversationController {
 
     private final ConversationService conversationService;
     private final MessageService messageService;
+
+    public ConversationController(ConversationService conversationService, MessageService messageService) {
+        this.conversationService = conversationService;
+        this.messageService = messageService;
+    }
 
     @GetMapping
     @Operation(summary = "Get conversations (all or filtered by user)")

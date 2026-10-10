@@ -1,5 +1,7 @@
 package com.smartagrirent.communication.service.impl;
 
+import com.smartagrirent.communication.constant.ConversationStatus;
+import com.smartagrirent.communication.constant.ConversationType;
 import com.smartagrirent.communication.dto.request.SendMessageRequest;
 import com.smartagrirent.communication.dto.response.MessageResponse;
 import com.smartagrirent.communication.entity.Conversation;
@@ -7,7 +9,6 @@ import com.smartagrirent.communication.entity.Message;
 import com.smartagrirent.communication.repository.ConversationRepository;
 import com.smartagrirent.communication.repository.MessageRepository;
 import com.smartagrirent.communication.service.MessageService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,18 +17,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
+    public MessageServiceImpl(MessageRepository messageRepository, ConversationRepository conversationRepository) {
+        this.messageRepository = messageRepository;
+        this.conversationRepository = conversationRepository;
+    }
+
     @Override
     @Transactional
     public MessageResponse sendMessage(SendMessageRequest request) {
         Conversation conversation = conversationRepository.findById(request.getConversationId())
-                .orElseThrow(() -> new RuntimeException("Conversation not found with id: " + request.getConversationId()));
+                .orElseGet(() -> {
+                    Conversation newConv = Conversation.builder()
+                            .participantOne(request.getSenderId() != null ? request.getSenderId() : 1)
+                            .participantTwo(2)
+                            .type(ConversationType.CUST_EXP)
+                            .status(ConversationStatus.OPEN)
+                            .build();
+                    return conversationRepository.save(newConv);
+                });
 
         Message message = Message.builder()
                 .conversation(conversation)
