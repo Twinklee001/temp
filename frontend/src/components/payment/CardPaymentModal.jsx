@@ -225,37 +225,6 @@ export default function CardPaymentModal({
             </div>
           </div>
 
-          {/* Quick Demo Fill Buttons (For Presentation) */}
-          <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs">
-            <div className="flex items-center gap-1.5 text-amber-900 font-bold mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Thẻ Mẫu Thử Nghiệm (Bấm để điền nhanh khi demo):</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemoCard('VISA')}
-                className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold text-[11px] hover:bg-amber-100 transition-colors cursor-pointer"
-              >
-                💳 Thẻ Visa Test
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCard('MASTERCARD')}
-                className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold text-[11px] hover:bg-amber-100 transition-colors cursor-pointer"
-              >
-                💳 Thẻ Mastercard Test
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCard('NAPAS_ATM')}
-                className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold text-[11px] hover:bg-amber-100 transition-colors cursor-pointer"
-              >
-                🏦 Thẻ ATM Nội Địa Test
-              </button>
-            </div>
-          </div>
-
           {/* Payment Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
