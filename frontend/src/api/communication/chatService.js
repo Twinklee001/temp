@@ -51,6 +51,25 @@ export const chatService = {
         thread: result.thread,
         timestamp: Date.now()
       });
+
+      // Asynchronously sync with Backend Spring Boot service (Port 8087) if running
+      try {
+        const numericConvId = parseInt(String(threadId).replace(/\D/g, ''), 10) || 1;
+        fetch(`http://localhost:8087/api/v1/conversations/${numericConvId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderId: sender === 'expert' ? 2 : (sender === 'worker' ? 3 : 6),
+            senderName,
+            content: text.trim(),
+            attachmentUrl: meta?.photoUrl || null
+          })
+        }).catch(() => {
+          // Gracefully fallback to local storage if backend service is not running
+        });
+      } catch (e) {
+        // ignore
+      }
     }
 
     return result;
