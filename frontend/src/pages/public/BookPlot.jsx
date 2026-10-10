@@ -21,6 +21,7 @@ import {
   FileText,
   UserCheck
 } from 'lucide-react';
+import VietQrModal from '../../components/payment/VietQrModal';
 
 export default function BookPlot() {
   const { id } = useParams();
@@ -38,6 +39,8 @@ export default function BookPlot() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [contractCode, setContractCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrData, setQrData] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -56,14 +59,65 @@ export default function BookPlot() {
   const subtotalCare = careMonthlyPrice * rentalMonths;
   const totalAmount = subtotalPlot + subtotalCare;
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     setIsProcessing(true);
+
+    if (paymentMethod === 'VIETQR') {
+      try {
+        const descText = `FARMELY ${plot.code} ${user?.fullName ? user.fullName.replace(/\s+/g, '') : 'KHACH'}`;
+        const response = await fetch('http://localhost:8085/api/v1/payments/vietqr/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: totalAmount,
+            plotCode: plot.code,
+            description: descText,
+            customerName: user?.fullName || 'Khách hàng Farmely'
+          })
+        });
+
+        const resData = await response.json();
+        if (resData?.success && resData?.data) {
+          setQrData(resData.data);
+          setShowQrModal(true);
+          setIsProcessing(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend payment-service offline, using quick VietQR client fallback:', err);
+      }
+
+      // Fallback if backend service is unreachable
+      const fallbackDesc = `FARMELY ${plot.code} KHACH`;
+      const fallbackImg = `https://img.vietqr.io/image/ICB-108876543210-compact2.png?amount=${totalAmount}&addInfo=${encodeURIComponent(fallbackDesc)}&accountName=${encodeURIComponent('FARMELY AGRIRENT CORP')}`;
+      setQrData({
+        transactionId: null,
+        qrImageUrl: fallbackImg,
+        amount: totalAmount,
+        bankName: 'VietinBank (ICB)',
+        accountNo: '108876543210',
+        accountName: 'FARMELY AGRIRENT CORP',
+        description: fallbackDesc
+      });
+      setShowQrModal(true);
+      setIsProcessing(false);
+      return;
+    }
+
+    // Default flow for Card / other payment
     setTimeout(() => {
       setIsProcessing(false);
       const generatedCode = `CTR-FARM-${Math.floor(100000 + Math.random() * 900000)}`;
       setContractCode(generatedCode);
       setIsSuccess(true);
     }, 1000);
+  };
+
+  const handlePaymentSuccess = (paidResult) => {
+    setShowQrModal(false);
+    const generatedCode = `CTR-FARM-${Math.floor(100000 + Math.random() * 900000)}`;
+    setContractCode(generatedCode);
+    setIsSuccess(true);
   };
 
   const handleQuickCustomerLogin = () => {
@@ -481,6 +535,16 @@ export default function BookPlot() {
         )}
 
       </main>
+
+      {/* VietQR Payment Pop-up Modal */}
+      <VietQrModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        qrData={qrData}
+        onPaymentSuccess={handlePaymentSuccess}
+        plotInfo={plot}
+        totalAmount={totalAmount}
+      />
 
       <Footer />
     </div>
