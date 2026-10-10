@@ -2228,7 +2228,7 @@ export default function CustomerDashboard() {
 
       {/* MODAL 1: CHECKOUT / BUY SERVICE (Thanh Toán Dịch Vụ Canh Tác) */}
       <Modal
-        isOpen={Boolean(selectedServiceToBuy)}
+        isOpen={Boolean(selectedServiceToBuy) && !showServiceQrModal && !showServiceCardModal}
         onClose={() => setSelectedServiceToBuy(null)}
         title="Thanh Toán Dịch Vụ Canh Tác"
         subtitle={selectedServiceToBuy?.name}

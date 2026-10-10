@@ -115,21 +115,20 @@ export default function CardPaymentModal({
           onPaymentSuccess(data.data);
         }
         return;
+      } else {
+        setErrorMessage(data?.message || 'Không thể thực hiện thanh toán qua thẻ.');
+        return;
       }
     } catch (err) {
-      console.warn('Backend payment-service error, fallbacking to client success:', err);
+      console.error('Backend payment-service error:', err);
+      setErrorMessage('Lỗi kết nối cổng thanh toán. Vui lòng thử lại!');
     } finally {
       setIsProcessing(false);
-    }
-
-    // Client fallback if service is momentarily offline
-    if (onPaymentSuccess) {
-      onPaymentSuccess({ paymentMethod: cardType, amount: totalAmount });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-stone-900/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden my-auto animate-scale-up">
         
         {/* Header */}

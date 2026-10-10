@@ -73,7 +73,6 @@ public class PaymentServiceImpl implements PaymentService {
                 ? request.getDescription().trim()
                 : ("FARMELY " + (request.getPlotCode() != null ? request.getPlotCode() : "DAT") + " " + (timestamp % 100000));
 
-        // Save PENDING transaction to PostgreSQL table payment_transactions
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .contractId(request.getContractId())
                 .serviceRequestId(request.getServiceRequestId())
@@ -85,7 +84,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         PaymentTransaction saved = paymentTransactionRepository.save(transaction);
-
         return buildVietQrResponse(saved, bankId, accountNo, accountName, description, gatewayRef);
     }
 
@@ -98,7 +96,6 @@ public class PaymentServiceImpl implements PaymentService {
         transaction.setStatus(PaymentStatus.SUCCESS);
         PaymentTransaction updated = paymentTransactionRepository.save(transaction);
 
-        // Update linked service_request status to ASSIGNED if linked
         if (updated.getServiceRequestId() != null) {
             serviceRequestRepository.findById(updated.getServiceRequestId()).ifPresent(req -> {
                 req.setStatus(RequestStatus.ASSIGNED);
@@ -118,7 +115,25 @@ public class PaymentServiceImpl implements PaymentService {
 
         String method = (request.getCardType() != null && !request.getCardType().isBlank())
                 ? request.getCardType().trim().toUpperCase()
-                : "CARD";
+                : (request.getPaymentMethod() != null ? request.getPaymentMethod().trim().toUpperCase() : "VISA");
+
+        if (method.contains("NAPAS") || method.contains("ATM")) {
+            method = "NAPAS_ATM";
+        }
+
+        Integer serviceRequestId = request.getServiceRequestId();
+        // If this request is for a cultivation service:
+        if (serviceRequestId == null && (request.getServiceName() != null || request.getServiceId() != null)) {
+            Integer resolvedSvcId = mapServiceCodeToId(request.getServiceId(), request.getServiceName());
+            ServiceRequest svcReq = ServiceRequest.builder()
+                    .rentalId(request.getRentalId() != null && request.getRentalId() > 0 ? request.getRentalId() : 1)
+                    .serviceId(resolvedSvcId)
+                    .scheduledDate(request.getScheduledDate() != null ? request.getScheduledDate() : LocalDate.now().plusDays(1))
+                    .status(RequestStatus.ASSIGNED)
+                    .build();
+            ServiceRequest savedSvcReq = serviceRequestRepository.save(svcReq);
+            serviceRequestId = savedSvcReq.getRequestId();
+        }
 
         String cleanCard = request.getCardNumber() != null ? request.getCardNumber().replaceAll("\\s+", "") : "";
         String last4 = cleanCard.length() >= 4 ? cleanCard.substring(cleanCard.length() - 4) : "4242";
@@ -127,7 +142,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .contractId(request.getContractId())
-                .serviceRequestId(request.getServiceRequestId())
+                .serviceRequestId(serviceRequestId)
                 .type(TransactionType.PAYMENT)
                 .amount(amount)
                 .paymentMethod(method)
@@ -155,7 +170,6 @@ public class PaymentServiceImpl implements PaymentService {
                 ? request.getScheduledDate()
                 : LocalDate.now().plusDays(1);
 
-        // 1. Create ServiceRequest with status PENDING
         ServiceRequest serviceRequest = ServiceRequest.builder()
                 .rentalId(resolvedRentalId)
                 .serviceId(resolvedServiceId)
@@ -170,7 +184,6 @@ public class PaymentServiceImpl implements PaymentService {
         String gatewayRef = "VQR_SVC_" + (timestamp % 10000000);
         String description = "FARMELY DV" + savedRequest.getRequestId() + " " + (request.getPlotCode() != null ? request.getPlotCode() : "PLOT");
 
-        // 2. Create PaymentTransaction with service_request_id foreign key relationship
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .serviceRequestId(savedRequest.getRequestId())
                 .type(TransactionType.PAYMENT)
@@ -181,7 +194,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         PaymentTransaction savedTx = paymentTransactionRepository.save(transaction);
-
         return buildVietQrResponse(savedTx, DEFAULT_BANK_ID, DEFAULT_ACCOUNT_NO, DEFAULT_ACCOUNT_NAME, description, gatewayRef);
     }
 
@@ -197,7 +209,6 @@ public class PaymentServiceImpl implements PaymentService {
                 ? request.getScheduledDate()
                 : LocalDate.now().plusDays(1);
 
-        // 1. Create ServiceRequest with status ASSIGNED
         ServiceRequest serviceRequest = ServiceRequest.builder()
                 .rentalId(resolvedRentalId)
                 .serviceId(resolvedServiceId)
@@ -208,16 +219,21 @@ public class PaymentServiceImpl implements PaymentService {
         ServiceRequest savedRequest = serviceRequestRepository.save(serviceRequest);
 
         BigDecimal amount = resolveAmount(request, resolvedServiceId);
-        String method = (request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank())
-                ? request.getPaymentMethod().trim().toUpperCase()
-                : "VISA";
+        String method = (request.getCardType() != null && !request.getCardType().isBlank())
+                ? request.getCardType().trim().toUpperCase()
+                : (request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank()
+                        ? request.getPaymentMethod().trim().toUpperCase()
+                        : "VISA");
+
+        if (method.contains("NAPAS") || method.contains("ATM")) {
+            method = "NAPAS_ATM";
+        }
 
         String cleanCard = request.getCardNumber() != null ? request.getCardNumber().replaceAll("\\s+", "") : "";
         String last4 = cleanCard.length() >= 4 ? cleanCard.substring(cleanCard.length() - 4) : "8899";
         long timestamp = System.currentTimeMillis();
         String gatewayRef = method + "_SVC_" + (timestamp % 10000000) + "_L4_" + last4;
 
-        // 2. Create PaymentTransaction linked to ServiceRequest with status SUCCESS
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .serviceRequestId(savedRequest.getRequestId())
                 .type(TransactionType.PAYMENT)
@@ -243,7 +259,6 @@ public class PaymentServiceImpl implements PaymentService {
                 ? request.getScheduledDate()
                 : LocalDate.now().plusDays(1);
 
-        // 1. Create ServiceRequest with status ASSIGNED
         ServiceRequest serviceRequest = ServiceRequest.builder()
                 .rentalId(resolvedRentalId)
                 .serviceId(resolvedServiceId)
@@ -257,7 +272,6 @@ public class PaymentServiceImpl implements PaymentService {
         long timestamp = System.currentTimeMillis();
         String gatewayRef = "WALLET_SVC_" + (timestamp % 10000000);
 
-        // 2. Create PaymentTransaction with payment_method WALLET and status SUCCESS
         PaymentTransaction transaction = PaymentTransaction.builder()
                 .serviceRequestId(savedRequest.getRequestId())
                 .type(TransactionType.PAYMENT)
@@ -323,20 +337,37 @@ public class PaymentServiceImpl implements PaymentService {
     // =========================================================================
 
     private Integer resolveServiceId(CultivationPaymentRequest request) {
-        if (request.getServiceId() != null && request.getServiceId() > 0) {
-            return request.getServiceId();
+        Integer numId = request.getNumericServiceId();
+        if (numId != null && numId > 0) {
+            return numId;
         }
 
-        if (request.getServiceName() != null && !request.getServiceName().isBlank()) {
+        String code = request.getServiceId() != null ? request.getServiceId() : request.getServiceCode();
+        return mapServiceCodeToId(code, request.getServiceName());
+    }
+
+    private Integer mapServiceCodeToId(String code, String serviceName) {
+        if (code != null) {
+            switch (code.toUpperCase().trim()) {
+                case "SVC-FULL-CYCLE": return 1;
+                case "SVC-WEEKLY-CARE": return 2;
+                case "SVC-DAILY-CARE": return 2;
+                case "SVC-FERTILIZING": return 5;
+                case "SVC-WEEDING": return 3;
+                case "SVC-PEST-CONTROL": return 3;
+                case "SVC-HARVEST-PACK": return 4;
+            }
+        }
+
+        if (serviceName != null && !serviceName.isBlank()) {
             Optional<CultivationService> matched = cultivationServiceRepository
-                    .findFirstByServiceNameContainingIgnoreCase(request.getServiceName().trim());
+                    .findFirstByServiceNameContainingIgnoreCase(serviceName.trim());
             if (matched.isPresent()) {
                 return matched.get().getServiceId();
             }
         }
 
-        // Default to service 1 (Full Managed Package) or 2 (Irrigation Support)
-        return 1;
+        return 2;
     }
 
     private BigDecimal resolveAmount(CultivationPaymentRequest request, Integer serviceId) {

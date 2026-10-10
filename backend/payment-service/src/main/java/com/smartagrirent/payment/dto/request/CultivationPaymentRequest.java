@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class CultivationPaymentRequest {
-    private Integer serviceId;
+    private String serviceId;
+    private String serviceCode;
     private String serviceName;
     private Integer rentalId;
     private String plotCode;
@@ -13,6 +14,7 @@ public class CultivationPaymentRequest {
     private String notes;
     private BigDecimal amount;
     private String paymentMethod; // VIETQR, VISA, MASTERCARD, NAPAS_ATM, WALLET
+    private String cardType;
 
     // Optional card payment fields
     private String cardNumber;
@@ -28,12 +30,29 @@ public class CultivationPaymentRequest {
     public CultivationPaymentRequest() {
     }
 
-    public Integer getServiceId() {
+    public Integer getNumericServiceId() {
+        if (serviceId == null) return null;
+        try {
+            return Integer.parseInt(serviceId.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public String getServiceId() {
         return serviceId;
     }
 
-    public void setServiceId(Integer serviceId) {
+    public void setServiceId(String serviceId) {
         this.serviceId = serviceId;
+    }
+
+    public String getServiceCode() {
+        return serviceCode;
+    }
+
+    public void setServiceCode(String serviceCode) {
+        this.serviceCode = serviceCode;
     }
 
     public String getServiceName() {
@@ -98,6 +117,14 @@ public class CultivationPaymentRequest {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getCardType() {
+        return cardType;
+    }
+
+    public void setCardType(String cardType) {
+        this.cardType = cardType;
     }
 
     public String getCardNumber() {

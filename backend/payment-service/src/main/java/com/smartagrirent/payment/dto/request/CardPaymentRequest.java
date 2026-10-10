@@ -1,6 +1,7 @@
 package com.smartagrirent.payment.dto.request;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class CardPaymentRequest {
     private Integer contractId;
@@ -11,25 +12,18 @@ public class CardPaymentRequest {
     private String expiryDate;
     private String cvv;
     private String cardType; // VISA, MASTERCARD, NAPAS_ATM
+    private String paymentMethod;
     private String plotCode;
     private String customerName;
 
-    public CardPaymentRequest() {
-    }
+    // Optional service fields
+    private String serviceId;
+    private String serviceName;
+    private Integer rentalId;
+    private LocalDate scheduledDate;
+    private String notes;
 
-    public CardPaymentRequest(Integer contractId, Integer serviceRequestId, BigDecimal amount,
-                              String cardNumber, String cardHolder, String expiryDate, String cvv,
-                              String cardType, String plotCode, String customerName) {
-        this.contractId = contractId;
-        this.serviceRequestId = serviceRequestId;
-        this.amount = amount;
-        this.cardNumber = cardNumber;
-        this.cardHolder = cardHolder;
-        this.expiryDate = expiryDate;
-        this.cvv = cvv;
-        this.cardType = cardType;
-        this.plotCode = plotCode;
-        this.customerName = customerName;
+    public CardPaymentRequest() {
     }
 
     public Integer getContractId() {
@@ -96,6 +90,14 @@ public class CardPaymentRequest {
         this.cardType = cardType;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
     public String getPlotCode() {
         return plotCode;
     }
@@ -110,5 +112,45 @@ public class CardPaymentRequest {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public Integer getRentalId() {
+        return rentalId;
+    }
+
+    public void setRentalId(Integer rentalId) {
+        this.rentalId = rentalId;
+    }
+
+    public LocalDate getScheduledDate() {
+        return scheduledDate;
+    }
+
+    public void setScheduledDate(LocalDate scheduledDate) {
+        this.scheduledDate = scheduledDate;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }
