@@ -22,6 +22,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import VietQrModal from '../../components/payment/VietQrModal';
+import CardPaymentModal from '../../components/payment/CardPaymentModal';
 
 export default function BookPlot() {
   const { id } = useParams();
@@ -40,6 +41,7 @@ export default function BookPlot() {
   const [contractCode, setContractCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
   const [qrData, setQrData] = useState(null);
 
   useEffect(() => {
@@ -104,7 +106,13 @@ export default function BookPlot() {
       return;
     }
 
-    // Default flow for Card / other payment
+    if (paymentMethod === 'CARD') {
+      setIsProcessing(false);
+      setShowCardModal(true);
+      return;
+    }
+
+    // Default flow for other payment methods
     setTimeout(() => {
       setIsProcessing(false);
       const generatedCode = `CTR-FARM-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -115,6 +123,7 @@ export default function BookPlot() {
 
   const handlePaymentSuccess = (paidResult) => {
     setShowQrModal(false);
+    setShowCardModal(false);
     const generatedCode = `CTR-FARM-${Math.floor(100000 + Math.random() * 900000)}`;
     setContractCode(generatedCode);
     setIsSuccess(true);
@@ -544,6 +553,15 @@ export default function BookPlot() {
         onPaymentSuccess={handlePaymentSuccess}
         plotInfo={plot}
         totalAmount={totalAmount}
+      />
+
+      {/* Card Payment Pop-up Modal */}
+      <CardPaymentModal
+        isOpen={showCardModal}
+        onClose={() => setShowCardModal(false)}
+        totalAmount={totalAmount}
+        plotInfo={plot}
+        onPaymentSuccess={handlePaymentSuccess}
       />
 
       <Footer />

@@ -2,6 +2,7 @@ package com.smartagrirent.payment.service.impl;
 
 import com.smartagrirent.payment.constant.PaymentStatus;
 import com.smartagrirent.payment.constant.TransactionType;
+import com.smartagrirent.payment.dto.request.CardPaymentRequest;
 import com.smartagrirent.payment.dto.request.VietQrGenerateRequest;
 import com.smartagrirent.payment.dto.response.PaymentResponse;
 import com.smartagrirent.payment.dto.response.VietQrResponse;
@@ -110,6 +111,36 @@ public class PaymentServiceImpl implements PaymentService {
         transaction.setStatus(PaymentStatus.SUCCESS);
         PaymentTransaction updated = paymentTransactionRepository.save(transaction);
         return mapToResponse(updated);
+    }
+
+    @Override
+    @Transactional
+    public PaymentResponse processCardPayment(CardPaymentRequest request) {
+        BigDecimal amount = (request.getAmount() != null && request.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                ? request.getAmount()
+                : new BigDecimal("1800000.00");
+
+        String method = (request.getCardType() != null && !request.getCardType().isBlank())
+                ? request.getCardType().trim().toUpperCase()
+                : "CARD";
+
+        String cleanCard = request.getCardNumber() != null ? request.getCardNumber().replaceAll("\\s+", "") : "";
+        String last4 = cleanCard.length() >= 4 ? cleanCard.substring(cleanCard.length() - 4) : "4242";
+        long timestamp = System.currentTimeMillis();
+        String gatewayRef = method + "_TXN_" + (timestamp % 10000000) + "_L4_" + last4;
+
+        PaymentTransaction transaction = PaymentTransaction.builder()
+                .contractId(request.getContractId())
+                .serviceRequestId(request.getServiceRequestId())
+                .type(TransactionType.PAYMENT)
+                .amount(amount)
+                .paymentMethod(method)
+                .gatewayRef(gatewayRef)
+                .status(PaymentStatus.SUCCESS)
+                .build();
+
+        PaymentTransaction saved = paymentTransactionRepository.save(transaction);
+        return mapToResponse(saved);
     }
 
     @Override

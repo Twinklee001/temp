@@ -1,5 +1,6 @@
 package com.smartagrirent.payment.controller;
 
+import com.smartagrirent.payment.dto.request.CardPaymentRequest;
 import com.smartagrirent.payment.dto.request.VietQrGenerateRequest;
 import com.smartagrirent.payment.dto.response.ApiResponse;
 import com.smartagrirent.payment.dto.response.PaymentResponse;
@@ -27,6 +28,13 @@ public class PaymentController {
     public ApiResponse<VietQrResponse> generateVietQr(@RequestBody VietQrGenerateRequest request) {
         VietQrResponse response = paymentService.generateVietQr(request);
         return ApiResponse.ok("Khởi tạo mã VietQR thanh toán thành công", response);
+    }
+
+    @PostMapping("/card/charge")
+    @Operation(summary = "Process card payment (Visa, Mastercard, Napas ATM) and save SUCCESS transaction to PostgreSQL")
+    public ApiResponse<PaymentResponse> processCardPayment(@RequestBody CardPaymentRequest request) {
+        PaymentResponse response = paymentService.processCardPayment(request);
+        return ApiResponse.ok("Thanh toán qua thẻ thành công", response);
     }
 
     @PostMapping("/{transactionId}/confirm")
