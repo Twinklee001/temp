@@ -176,14 +176,6 @@ export default function VietQrModal({
             </div>
           </div>
 
-          {/* Quick Notice */}
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p>
-              Hệ thống sẽ tự động cập nhật trạng thái hợp đồng và lưu giao dịch vào <strong>PostgreSQL</strong> ngay khi tiền về tài khoản.
-            </p>
-          </div>
-
           {/* Action Buttons */}
           <div className="space-y-2 pt-1">
             <Button
