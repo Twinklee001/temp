@@ -19,6 +19,7 @@ export default function VietQrModal({
   qrData,
   onPaymentSuccess,
   plotInfo,
+  serviceInfo,
   totalAmount
 }) {
   const [copiedField, setCopiedField] = useState(null);
@@ -124,9 +125,13 @@ export default function VietQrModal({
             <div className="text-2xl sm:text-3xl font-heading font-black text-brand-green mt-0.5">
               {(Number(qrData.amount) || totalAmount || 0).toLocaleString('vi-VN')} đ
             </div>
-            {plotInfo && (
+            {(serviceInfo || plotInfo) && (
               <span className="text-xs text-stone-600 block mt-1 font-medium">
-                Đặt thuê thửa đất: <strong>{plotInfo.code} - {plotInfo.name}</strong>
+                {serviceInfo ? (
+                  <>Đăng ký dịch vụ: <strong className="text-emerald-700">{serviceInfo.name}</strong> {plotInfo ? <>• Thửa: <strong>{plotInfo.name || plotInfo.code}</strong></> : null}</>
+                ) : (
+                  <>Đặt thuê thửa đất: <strong>{plotInfo.code} - {plotInfo.name}</strong></>
+                )}
               </span>
             )}
           </div>

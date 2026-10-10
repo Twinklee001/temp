@@ -15,6 +15,9 @@ export default function CardPaymentModal({
   onClose,
   totalAmount,
   plotInfo,
+  serviceInfo,
+  chargeEndpoint,
+  additionalPayload,
   onPaymentSuccess
 }) {
   const [cardType, setCardType] = useState('VISA'); // 'VISA' | 'MASTERCARD' | 'NAPAS_ATM'
@@ -87,7 +90,8 @@ export default function CardPaymentModal({
 
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:8085/api/v1/payments/card/charge', {
+      const endpoint = chargeEndpoint || 'http://localhost:8085/api/v1/payments/card/charge';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +101,11 @@ export default function CardPaymentModal({
           expiryDate,
           cvv,
           cardType,
-          plotCode: plotInfo?.code || 'PLT'
+          paymentMethod: cardType,
+          plotCode: plotInfo?.code || 'PLT',
+          serviceName: serviceInfo?.name,
+          serviceId: serviceInfo?.id,
+          ...additionalPayload
         })
       });
 
@@ -151,6 +159,27 @@ export default function CardPaymentModal({
         {/* Body */}
         <div className="p-5 sm:p-6 space-y-5 max-h-[82vh] overflow-y-auto">
           
+          {/* Order Summary Item Banner */}
+          {(serviceInfo || plotInfo) && (
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-stone-500 block">Nội dung thanh toán</span>
+                <span className="font-heading font-black text-brand-dark text-sm block">
+                  {serviceInfo ? serviceInfo.name : `Thuê thửa: ${plotInfo?.code} - ${plotInfo?.name}`}
+                </span>
+                {serviceInfo && plotInfo && (
+                  <span className="text-[11px] text-stone-500 block mt-0.5">Thửa áp dụng: <strong>{plotInfo?.name || plotInfo?.code}</strong></span>
+                )}
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold text-stone-500 block">Tổng tiền</span>
+                <span className="font-heading font-black text-emerald-700 text-base">
+                  {(totalAmount || 0).toLocaleString('vi-VN')} đ
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Card Type Selector Tabs */}
           <div className="grid grid-cols-3 gap-2 p-1.5 bg-stone-100 rounded-2xl">
             <button
