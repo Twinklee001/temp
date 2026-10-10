@@ -229,6 +229,16 @@ export default function BookPlot() {
                 </span>
               </div>
               <div className="flex justify-between items-center">
+                <span className="text-stone-500">Chuyên gia phụ trách:</span>
+                <span className="font-bold text-emerald-800">ThS. Nguyễn Hoàng Nam</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-stone-500">Công nhân phụ trách (CVLĐ):</span>
+                <span className="font-bold text-amber-900">
+                  {selectedMode === 'ASSISTED' ? 'Trần Văn Lực (Tổ trưởng CVLĐ)' : 'Khách tự chăm sóc'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-stone-500">Thời hạn:</span>
                 <span className="font-bold text-brand-dark">{rentalMonths} Tháng canh tác</span>
               </div>
@@ -304,6 +314,14 @@ export default function BookPlot() {
                   >
                     <p className="font-heading text-sm font-bold text-brand-dark">Self-Growing</p>
                     <p className="text-xs text-stone-500 mt-1">Tự chăm sóc tại vườn cuối tuần</p>
+                    <div className="mt-2.5 space-y-1 text-[11px] text-stone-600 border-t border-brand-border/40 pt-2">
+                      <p className="flex items-center gap-1 font-medium text-emerald-800">
+                        ✓ Chuyên gia đồng hành: ThS. Nam (Tư vấn kỹ thuật online)
+                      </p>
+                      <p className="text-stone-500">
+                        ✓ Khách hàng tự trải nghiệm làm nông tại vườn
+                      </p>
+                    </div>
                     <p className="text-xs font-bold text-brand-green mt-3">Miễn phí dịch vụ chăm sóc</p>
                   </button>
 
@@ -318,6 +336,14 @@ export default function BookPlot() {
                   >
                     <p className="font-heading text-sm font-bold text-brand-dark">Assisted-Growing</p>
                     <p className="text-xs text-stone-500 mt-1">Đội ngũ Farmely chăm sóc trọn gói hàng ngày</p>
+                    <div className="mt-2.5 space-y-1 text-[11px] text-stone-600 border-t border-brand-border/40 pt-2">
+                      <p className="flex items-center gap-1 font-medium text-emerald-800">
+                        ✓ Chuyên gia phụ trách: ThS. Nguyễn Hoàng Nam (Quy trình VietGAP)
+                      </p>
+                      <p className="text-amber-900 font-medium">
+                        ✓ Công nhân phụ trách (CVLĐ): Phân công cố định (Tưới, nhổ cỏ 2 ca/ngày)
+                      </p>
+                    </div>
                     <p className="text-xs font-bold text-brand-green mt-3">+{plot.careServicePrice.toLocaleString('vi-VN')} đ/tháng</p>
                   </button>
                 </div>
