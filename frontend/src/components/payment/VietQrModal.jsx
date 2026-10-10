@@ -91,7 +91,7 @@ export default function VietQrModal({
             </div>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-heading font-black">
+          <h2 className="text-xl sm:text-2xl font-heading font-black text-white">
             Quét Mã VietQR Thanh Toán
           </h2>
           <p className="text-xs text-emerald-100 mt-1">

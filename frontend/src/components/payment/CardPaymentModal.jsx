@@ -125,7 +125,7 @@ export default function CardPaymentModal({
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden my-auto animate-scale-up">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white p-5 sm:p-6 relative">
+        <div className="bg-gradient-to-r from-emerald-800 via-brand-green to-emerald-900 text-white p-5 sm:p-6 relative">
           <button
             type="button"
             onClick={onClose}
@@ -140,10 +140,10 @@ export default function CardPaymentModal({
             </span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-heading font-black">
+          <h2 className="text-xl sm:text-2xl font-heading font-black text-white">
             Thanh Toán Thẻ Quốc Tế / Nội Địa
           </h2>
-          <p className="text-xs text-stone-300 mt-1">
+          <p className="text-xs text-emerald-100 mt-1">
             Hỗ trợ thẻ Visa, Mastercard và thẻ ATM Napas tất cả các ngân hàng Việt Nam
           </p>
         </div>
